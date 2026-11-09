@@ -1,0 +1,5 @@
+# Module 6: Agents
+
+## Week 10 mini-project: Goldie, the No Bald assistant
+
+Goldie is a support assistant for No Bald Spots, a made-up hair product shop, and she tells shoppers the price of shampoo, conditioner, hair oil, and curl cream using a PriceList tool. Goldie is a mock because her replies come from simple keyword rules in my code, not from AI, so she only understands messages that contain words like "price," "cost," or "how much." Refunds, returns, and allergic reactions are passed to a store associate, because refunds involve money and a scalp reaction is a health issue that a real person should handle. If Goldie used real customer data, a keyword rule could match the wrong thing and give a customer the wrong price, or a message that mentions a refund for a different reason could get sent to a person when it didn't need to be.
