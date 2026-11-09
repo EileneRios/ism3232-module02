@@ -3,6 +3,7 @@
 
 from my_assistant import HairAssistant
 from my_tool import PriceList
+from ollama_model import OllamaModel
 
 PRICES = {
     "shampoo": "$14.00",
@@ -11,12 +12,16 @@ PRICES = {
     "curl cream": "$18.00",
 }
 
+INSTRUCTIONS = """You are Goldie, an assistant for No Bald Spots, a hair product shop.
+Answer in one short sentence.
+The store is open 9 am to 8 pm every day.
+Orders over $35 get free shipping.
+Only state facts that appear in these instructions.
+If you do not know, say you do not know and offer to pass the shopper to a store associate."""
+
 price_list = PriceList(PRICES)
-assistant = HairAssistant(
-    "Goldie",
-    "You help shoppers at No Bald Spots check prices on hair products.",
-    price_list,
-)
+model = OllamaModel("granite4.1:3b")
+assistant = HairAssistant("Goldie", INSTRUCTIONS, price_list, model)
 
 print("Type a message, or type quit to stop.")
 user_message = input("You: ")
