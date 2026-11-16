@@ -2,16 +2,17 @@
 # Author: Eilene Rios
 
 HANDOFF_WORDS = ["refund", "return", "allergic", "reaction"]
+MAX_TOOL_ROUNDS = 3
 
 
 class HairAssistant:
-    """A hair shop assistant. Rules handle prices and handoffs. A model handles the rest."""
+    """A hair shop assistant. The model decides. The toolbox checks every tool request."""
 
-    def __init__(self, name, instructions, price_list, model):
-        """Set up one assistant with its own name, instructions, tool, model, and history."""
+    def __init__(self, name, instructions, tools, model):
+        """Set up one assistant with its own name, instructions, tools, model, and history."""
         self.name = name
         self.instructions = instructions
-        self.price_list = price_list
+        self.tools = tools
         self.model = model
         self.history = []
 
@@ -23,20 +24,10 @@ class HairAssistant:
         return reply
 
     def choose_reply(self, user_message):
-        """Use a rule when one applies. Otherwise ask the model."""
-        text = user_message.lower()
-        if self.needs_human(text):
+        """Pass refunds and reactions to a person. Send everything else to the model."""
+        if self.needs_human(user_message.lower()):
             return "I can't handle that here. I'm passing you to a store associate."
-        if "price" in text or "cost" in text or "how much" in text:
-            return self.price_reply(user_message)
         return self.model_reply()
-
-    def model_reply(self):
-        """Ask the model for a reply. Give a safe answer if the model has none."""
-        reply = self.model.reply(self.instructions, self.history)
-        if reply is None:
-            return "Sorry, I can't answer that right now. Please try again in a moment."
-        return reply
 
     def needs_human(self, text):
         """Return True if the message is about something a person must handle."""
@@ -45,10 +36,26 @@ class HairAssistant:
                 return True
         return False
 
-    def price_reply(self, user_message):
-        """Use the price list to answer a question about a product."""
-        product = self.price_list.find_product(user_message)
-        if product is None:
-            return "Which product? I can check shampoo, conditioner, hair oil, or curl cream."
-        price = self.price_list.price_for(product)
-        return f"The {product} costs {price}."
+    def model_reply(self):
+        """Ask the model. Run each tool it asks for, then ask again, up to a limit."""
+        rounds = 0
+        while rounds < MAX_TOOL_ROUNDS:
+            tool_list = self.tools.tool_list()
+            decision = self.model.decide(self.instructions, self.history, tool_list)
+            if decision is None:
+                return "Sorry, I can't answer that right now. Please try again in a moment."
+            if "text" in decision:
+                return decision["text"]
+            name = decision["tool"]
+            arguments = decision["arguments"]
+            result = self.tools.run(name, arguments, self.history)
+            self.history.append(
+                {
+                    "role": "tool",
+                    "tool_name": name,
+                    "arguments": arguments,
+                    "content": result,
+                }
+            )
+            rounds += 1
+        return "Sorry, I couldn't finish that. I'm passing you to a store associate."

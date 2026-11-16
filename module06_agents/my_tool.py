@@ -21,3 +21,14 @@ class PriceList:
         if product in self.prices:
             return self.prices[product]
         return None
+
+    def check_price(self, product):
+        """Look up the price of one product.
+
+        Args:
+            product: The product name, like shampoo or hair oil.
+        """
+        found = self.find_product(product)
+        if found is None:
+            return "That product was not found. Ask which product the shopper means."
+        return f"The {found} costs {self.price_for(found)}."
